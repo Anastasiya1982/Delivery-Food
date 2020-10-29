@@ -1,5 +1,8 @@
-
 'use strict';
+import Swiper from 'https://unpkg.com/swiper/swiper-bundle.esm.browser.min.js';
+
+
+const RED_COLOR="#ff0000";
 
 const cartButton = document.querySelector("#cart-button");
 const modal = document.querySelector(".modal");
@@ -72,7 +75,7 @@ function notAutorized() {
             loginForm.reset();
             checkAuth();
         } else {
-            loginInput.style.borderColor = '#ff0000';
+            loginInput.style.borderColor = RED_COLOR;
             loginInput.value = '';
         }
     }
@@ -153,6 +156,7 @@ function createCardGood() {
 
 function openGoods(event) {
   const target = event.target;
+  if(login){
   const restaurant = target.closest('.card-restaurant');
 
   if (restaurant) {
@@ -164,6 +168,9 @@ function openGoods(event) {
     createCardGood();
     createCardGood();
     createCardGood();
+  }
+}else{
+  toggleModalAuth();
   }
 }
 
@@ -181,3 +188,11 @@ logo.addEventListener('click', function () {
 checkAuth();
 createCardRestaurant();
 createCardRestaurant();
+createCardRestaurant();
+
+
+new Swiper('.swiper-container',{
+    slidePerView:1,
+    loop:true,
+    autoplay:true,
+});
