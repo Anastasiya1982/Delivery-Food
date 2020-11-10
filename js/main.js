@@ -231,9 +231,16 @@ function init() {
             const value=event.target.value.trim();
             //проверяем на пустую строку, если  пустая, то не будет выводиться
             if(!value){
+                event.target.style.backgroundColor=RED_COLOR;
+                event.target.value='ВВЕДИТЕ НАИМЕНОВАНИЕ';
+                //через время очищаем красный фон
+                setTimeout(function () {
+                    event.target.style.backgroundColor='';
+                },1500)
                 return;
             }
-           //запрос
+
+           //запрос за данными
             getData('./db/partners.json')
                 .then(function (data) {
                     return data.map((partner) => {
