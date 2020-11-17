@@ -1,6 +1,21 @@
 'use strict';
 import Swiper from 'https://unpkg.com/swiper/swiper-bundle.esm.browser.min.js';
 
+//Slider
+
+const swiper= new Swiper('.swiper-container', {
+        slidePerView: 1,
+        loop: true,
+        autoplay: true,
+        cubeEffect: {
+            shadow: false,
+        },
+        pagination: {
+            el: '.swiper-pagination',
+            clickable: true,
+        },
+    }
+);
 
 const RED_COLOR="#ff0000";
 
@@ -29,9 +44,20 @@ const modalBody = document.querySelector('.modal-body');
 const modalPriceTag=document.querySelector('.modal-pricetag')
 const buttonClearCart=document.querySelector('.clear-cart');
 
-let login = localStorage.getItem('userName');
-const cart = [];
 
+let login = localStorage.getItem('userName');
+const cart = JSON.parse(localStorage.getItem(`gloDelivery_${login}`)) || [];
+
+function saveCart() {
+localStorage.setItem(`gloDelivery_${login}`, JSON.stringify(cart));
+}
+
+function downloadCart() {
+    if (localStorage.getItem(`gloDelivery_${login}`)) {
+        const data = JSON.parse(localStorage.getItem(`gloDelivery_${login}`));
+        cart.push(...data);
+    }
+}
 //запрос на сервер
 
 const getData = async function (url) {
@@ -64,6 +90,7 @@ function toggleModalAuth() {
 
 function returnMain() {
 containerPromo.classList.remove('hide');
+swiper.init();
 restaurants.classList.remove('hide');
 menu.classList.add('hide');
 }
@@ -71,6 +98,7 @@ menu.classList.add('hide');
 function autorized() {
     function logOut() {
         login = null;
+        cart.length=0;
         localStorage.removeItem('userName');
         buttonAuth.style.display = '';
         buttonOut.style.display = '';
@@ -101,10 +129,12 @@ function validName(str) {
 function notAutorized() {
     function logIn(event) {
         event.preventDefault();
+
         if (validName(loginInput.value)) {
             login = loginInput.value;
             localStorage.setItem('userName', login);
             toggleModalAuth();
+            downloadCart();
             buttonAuth.removeEventListener('click', toggleModalAuth);
             closeAuth.removeEventListener('click', toggleModalAuth);
             loginForm.removeEventListener("submit", logIn);
@@ -199,6 +229,7 @@ function openGoods(event) {
     cardsMenu.textContent = '';
     restaurants.classList.add('hide');
     containerPromo.classList.add('hide');
+    swiper.destroy(false);
     menu.classList.remove('hide');
     const { name, kitchen,price,stars}= restaurant.info;
       restaurantTitle.textContent=name;
@@ -241,7 +272,7 @@ function addToCart(event) {
         });
     }
 
-     console.log(cart);
+     saveCart();
  }
 }
  function renderCart() {
@@ -267,6 +298,7 @@ function addToCart(event) {
    },0);
 
    modalPriceTag.textContent=totalPrice + ' P';
+    saveCart();
  };
 
 function changeCount(event) {
@@ -286,6 +318,7 @@ function changeCount(event) {
             food.count++;
         }
         renderCart();
+
     }
  }
 
@@ -306,12 +339,14 @@ function init() {
     buttonClearCart.addEventListener('click',function () {
        cart.length=0;
        renderCart();
-    })
+       toggleModal();
+    });
 
     cardsRestaurants.addEventListener('click', openGoods);
     logo.addEventListener('click', function () {
         restaurants.classList.remove('hide');
         containerPromo.classList.remove('hide');
+        swiper.init();
         menu.classList.add('hide');
     });
 
@@ -355,6 +390,7 @@ function init() {
 
                                 restaurants.classList.add('hide');
                                 containerPromo.classList.add('hide');
+                                swiper.destroy(false);
                                 menu.classList.remove('hide');
                                 restaurantTitle.textContent= 'Результат поиска';
                                 restaurantRating.textContent=""
@@ -371,19 +407,6 @@ function init() {
 
 
 
-//Slider
-new Swiper('.swiper-container',{
-    slidePerView:1,
-    loop:true,
-    autoplay:true,
-    cubeEffect:{
-        shadow:false,
-    },
 
-    pagination: {
-        el: '.swiper-pagination',
-        clickable:true,
-    },
-});
 
 init();
