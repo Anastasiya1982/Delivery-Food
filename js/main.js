@@ -406,57 +406,61 @@ function init() {
         }
     });
 
-//Динамический поиск  на поиск адреса
-//     inputAddress.addEventListener("keyup", function (event) {
-//
-//         //считываем значение с инпута
-//         const value = event.target.value.trim();
-//
-//         if (!value) {
-//             event.target.style.backgroundColor = RED_COLOR;
-//             event.target.value = 'ВВЕДИТЕ НАИМЕНОВАНИЕ';
-//             //через время очищаем красный фон
-//             setTimeout(function () {
-//                 event.target.style.backgroundColor = '';
-//                 event.target.value = '';
-//             }, 1500)
-//             return;
-//         }
-//         if(value.length<3) return;
-//
-//         //запрос за данными
-//         getData('./db/partners.json')
-//             .then(function (data) {
-//                 return data.map((partner) => {
-//                     return partner.products;
-//                 });
-//             })
-//             .then(function (linkProduct) {
-//                 cardsMenu.textContent = '';
-//
-//                 linkProduct.forEach(function (link) {
-//                     getData(`./db/${link}`)
-//                         .then(function (data) {
-//                             //сравниваем есть ли значение инпута в названиях карточек , привеодя все значения к нижнему регистру
-//                             const resultSearch = data.filter(item => {
-//                                 const name = item.name.toLowerCase();
-//                                 return name.includes(value.toLowerCase());
-//                             })
-//
-//                             restaurants.classList.add('hide');
-//                             containerPromo.classList.add('hide');
-//                             swiper.destroy(false);
-//                             menu.classList.remove('hide');
-//                             restaurantTitle.textContent = 'Результат поиска';
-//                             restaurantRating.textContent = ""
-//                             restaurantPrice.textContent = '';
-//                             restaurantCategory.textContent = 'Разное';
-//                             // выводим карточки
-//                             resultSearch.forEach(createCardGood);
-//                         })
-//                 })
-//             })
-//     })
+//Динамический поиск  а окке  поиск адреса но ищет по блюдам
+    inputAddress.addEventListener("keyup", function (event) {
+
+        //считываем значение с инпута
+        const value = event.target.value.trim();
+
+        if (!value && event.charCode===13) {
+            event.target.style.backgroundColor = RED_COLOR;
+            event.target.value = 'ВВЕДИТЕ НАИМЕНОВАНИЕ';
+            //через время очищаем красный фон
+            setTimeout(function () {
+                event.target.style.backgroundColor = '';
+                event.target.value = '';
+            }, 1500)
+            return;
+        }
+
+        if(!/^[А-Яа-яЁё]$/.test(event.key)){
+            return;
+        }
+        if(value.length<3) return;
+
+        //запрос за данными
+        getData('./db/partners.json')
+            .then(function (data) {
+                return data.map((partner) => {
+                    return partner.products;
+                });
+            })
+            .then(function (linkProduct) {
+                cardsMenu.textContent = '';
+
+                linkProduct.forEach(function (link) {
+                    getData(`./db/${link}`)
+                        .then(function (data) {
+                            //сравниваем есть ли значение инпута в названиях карточек , привеодя все значения к нижнему регистру
+                            const resultSearch = data.filter(item => {
+                                const name = item.name.toLowerCase();
+                                return name.includes(value.toLowerCase());
+                            })
+
+                            restaurants.classList.add('hide');
+                            containerPromo.classList.add('hide');
+                            swiper.destroy(false);
+                            menu.classList.remove('hide');
+                            restaurantTitle.textContent = 'Результат поиска';
+                            restaurantRating.textContent = ""
+                            restaurantPrice.textContent = '';
+                            restaurantCategory.textContent = 'Разное';
+                            // выводим карточки
+                            resultSearch.forEach(createCardGood);
+                        })
+                })
+            })
+    })
 }
 
 
