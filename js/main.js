@@ -25,11 +25,12 @@ const restaurantRating = document.querySelector('.rating');
 const restaurantPrice = document.querySelector('.price');
 const restaurantCategory=document.querySelector('.category');
 const inputSearch=document.querySelector('.input-search');
-
-
-
+const modalBody = document.querySelector('.modal-body');
+const modalPriceTag=document.querySelector('.modal-pricetag')
+const buttonClearCart=document.querySelector('.clear-cart');
 
 let login = localStorage.getItem('userName');
+const cart = [];
 
 //запрос на сервер
 
@@ -49,6 +50,7 @@ console.log(getData('./db/partners.json'));
  function toggleModal() {
   modal.classList.toggle("is-open");
 }
+
 function toggleModalAuth() {
     modalAuth.classList.toggle('is-open');
     loginInput.style.borderColor = '';
@@ -60,6 +62,12 @@ function toggleModalAuth() {
     }
 }
 
+function returnMain() {
+containerPromo.classList.remove('hide');
+restaurants.classList.remove('hide');
+menu.classList.add('hide');
+}
+
 function autorized() {
     function logOut() {
         login = null;
@@ -67,25 +75,29 @@ function autorized() {
         buttonAuth.style.display = '';
         buttonOut.style.display = '';
         userName.style.display = '';
+        cartButton.style.display='';
+
         buttonOut.removeEventListener('click', logOut);
         checkAuth();
+        returnMain();
     }
 
     console.log('Autorized');
     userName.textContent = login;
     buttonAuth.style.display = 'none';
-    buttonOut.style.display = 'block';
+    buttonOut.style.display = 'flex';
     userName.style.display = 'inline';
+    cartButton.style.display='flex';
     buttonOut.addEventListener("click", logOut);
 }
-
+// проверка на валидность формы
 function validName(str) {
     const regName = /^[a-zA-Z][a-zA-Z0-9-_\.]{1,20}$/;
     return regName.test(str);
 }
 
 
-
+// вылогиниваемся
 function notAutorized() {
     function logIn(event) {
         event.preventDefault();
@@ -153,13 +165,11 @@ function createCardRestaurant({ image, kitchen, name,price,products,stars, time_
 }
 
 
-function createCardGood(goods) {
-    const { id,name,description, price,image } = goods;
+function createCardGood({ id,name,description, price,image }) {
 
     const card = document.createElement('div');
     card.className = 'card';
     card.insertAdjacentHTML('beforeend', `
-
         <img src="${image}" alt="image" class="card-image"/>
             <div class="card-text">
             <div class="card-heading">
@@ -169,10 +179,10 @@ function createCardGood(goods) {
             <div class="ingredients">${description}</div>
          </div>
         <div class="card-buttons">
-                <button class="button button-primary button-add-cart">
+                <button class="button button-primary button-add-cart" id="${id}"> В корзину
                 <span class="button-cart-svg"></span>
          </button>
-         <strong class="card-price-bold">${price} P</strong>
+         <strong class="card-price card-price-bold">${price} P</strong>
     </div>
 </div>
   `
@@ -205,15 +215,98 @@ function openGoods(event) {
   }
 }
 
+// добавление товаров в корзину 
+
+function addToCart(event) {
+ const target = event.target;
+ const buttonAddToCart=target.closest('.button-add-cart');
+
+ if(buttonAddToCart){
+     const card=target.closest('.card');
+     const title=card.querySelector('.card-title-reg').textContent;
+     const cost = card.querySelector('.card-price').textContent;
+     const id = buttonAddToCart.id;
+     const food=cart.find(function (item) {
+           return item.id=== id;
+     })
+
+    if(food){
+        food.count += 1;
+    }else{
+        cart.push({
+            id,
+            title,
+            cost,
+            count:1,
+        });
+    }
+
+     console.log(cart);
+ }
+}
+ function renderCart() {
+   modalBody.textContent='';
+   cart.forEach(function ({ id,title,cost,count}) {
+      const itemCart=` 
+           <div class="food-row">
+              <span class="food-name">${title}</span>
+              <strong class="food-price">${cost}</strong>
+              <div class="food-counter">
+                   <button class="counter-button counter-minus" data-id=${id}>-</button>
+                    <span class="counter">${count}</span>
+                   <button class="counter-button counter-plus" data-id=${id}>+</button>
+               </div>
+            </div>
+      `;
+      modalBody.insertAdjacentHTML('afterbegin',itemCart)// вставляем чтоб последний добавленный элемент был вначале списка
+   });
+
+   const totalPrice=cart.reduce(function (result,item) {
+       // складываем цены переводя строки в цифры
+            return result + (parseFloat(item.cost)*item.count);
+   },0);
+
+   modalPriceTag.textContent=totalPrice + ' P';
+ };
+
+function changeCount(event) {
+    const target = event.target;
+
+    if (target.classList.contains('counter-button')) {
+        const food = cart.find(function (item) {
+            return item.id === target.dataset.id;
+        });
+        if (target.classList.contains('counter-minus')) {
+            food.count--;
+            if(food.count===0){
+                cart.splice(cart.indexOf(food),1)
+            }
+        }
+        if (target.classList.contains('counter-plus')) {
+            food.count++;
+        }
+        renderCart();
+    }
+ }
+
+  // инициализация
 function init() {
     getData('./db/partners.json').then((data) => {
         data.forEach(createCardRestaurant);
     });
 
    // buttonAuth.addEventListener('click',clearForm);
-    cartButton.addEventListener("click", toggleModal);
+    cartButton.addEventListener("click",function (){
+        renderCart();
+        toggleModal();
+    } );
+    modalBody.addEventListener('click',changeCount);
+    cardsMenu.addEventListener("click",addToCart);
     close.addEventListener("click", toggleModal);
-
+    buttonClearCart.addEventListener('click',function () {
+       cart.length=0;
+       renderCart();
+    })
 
     cardsRestaurants.addEventListener('click', openGoods);
     logo.addEventListener('click', function () {
@@ -236,6 +329,7 @@ function init() {
                 //через время очищаем красный фон
                 setTimeout(function () {
                     event.target.style.backgroundColor='';
+                    event.target.value='';
                 },1500)
                 return;
             }
